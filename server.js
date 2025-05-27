@@ -1,3 +1,4 @@
+// ======= server.js (Node.js + Express + Socket.IO) =======
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -13,15 +14,36 @@ const groups = {}; // { groupName: { password, users: Set<socket.id> } }
 
 app.use(express.static(path.join(__dirname, "public")));
 
+function broadcastGroupList() {
+  const groupList = Object.keys(groups);
+  io.emit("groupList", groupList);
+}
+
+function emitGroupUserList(groupName) {
+  const groupUsers = Array.from(groups[groupName].users).map(id => users[id]?.username).filter(Boolean);
+  for (let id of groups[groupName].users) {
+    io.to(id).emit("userList", groupUsers);
+  }
+}
+
 io.on("connection", (socket) => {
   console.log("New user connected");
 
   socket.on("join", ({ username }) => {
     users[socket.id] = { username, group: null };
-    io.emit("userList", Object.values(users).map(u => u.username));
+    broadcastGroupList();
   });
 
   socket.on("createOrJoinGroup", ({ groupName, password }) => {
+    const user = users[socket.id];
+    if (!user) return;
+
+    if (user.group && groups[user.group]) {
+      groups[user.group].users.delete(socket.id);
+      emitGroupUserList(user.group);
+      if (groups[user.group].users.size === 0) delete groups[user.group];
+    }
+
     if (!groups[groupName]) {
       groups[groupName] = { password, users: new Set() };
     } else if (groups[groupName].password !== password) {
@@ -32,6 +54,8 @@ io.on("connection", (socket) => {
     groups[groupName].users.add(socket.id);
     users[socket.id].group = groupName;
     socket.emit("joinedGroup", groupName);
+    emitGroupUserList(groupName);
+    broadcastGroupList();
   });
 
   socket.on("message", (msg) => {
@@ -48,10 +72,11 @@ io.on("connection", (socket) => {
     const user = users[socket.id];
     if (user && user.group && groups[user.group]) {
       groups[user.group].users.delete(socket.id);
+      emitGroupUserList(user.group);
       if (groups[user.group].users.size === 0) delete groups[user.group];
     }
     delete users[socket.id];
-    io.emit("userList", Object.values(users).map(u => u.username));
+    broadcastGroupList();
     console.log("User disconnected");
   });
 });
