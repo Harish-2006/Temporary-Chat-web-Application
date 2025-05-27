@@ -60,6 +60,19 @@
       font-size: 0.9em;
       color: #666;
     }
+
+    #groupList {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #444;
+    }
+
+    #groupList span {
+      cursor: pointer;
+      text-decoration: underline;
+      display: block;
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
@@ -73,6 +86,7 @@
     <input id="groupName" placeholder="Group name" />
     <input id="groupPassword" type="password" placeholder="Group password" />
     <button onclick="joinGroup()">Join or Create Group</button>
+    <div id="groupList"></div>
   </div>
 
   <div class="card">
@@ -101,6 +115,7 @@
       const groupName = document.getElementById("groupName").value;
       const password = document.getElementById("groupPassword").value;
       if (!groupName || !password) return alert("Enter group name and password");
+      document.getElementById("chat").innerHTML = "";
       socket.emit("createOrJoinGroup", { groupName, password });
     }
 
@@ -116,7 +131,15 @@
 
     socket.on("userList", (userList) => {
       document.getElementById("users").innerHTML =
-        `<strong>Online Users:</strong> ${userList.join(", ")}`;
+        `<strong>Online Users in Group:</strong> ${userList.join(", ")}`;
+    });
+
+    socket.on("groupList", (groupNames) => {
+      const list = document.getElementById("groupList");
+      list.innerHTML = "<strong>Available Groups:</strong>";
+      groupNames.forEach(name => {
+        list.innerHTML += `<span onclick="document.getElementById('groupName').value='${name}'">${name}</span>`;
+      });
     });
 
     socket.on("errorMessage", (msg) => {
