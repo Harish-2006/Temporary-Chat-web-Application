@@ -2,19 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Temporary Chat</title>
+  <title>Group Chat</title>
   <style>
     body { font-family: Arial; padding: 20px; }
     #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-    #users { margin-top: 10px; }
+    #users, #groupStatus { margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h2>Temporary Chat</h2>
+  <h2>Temporary Group Chat</h2>
   <div>
     <input id="username" placeholder="Enter username" />
     <button onclick="joinChat()">Join</button>
   </div>
+  <div>
+    <input id="groupName" placeholder="Enter group name" />
+    <input id="groupPassword" type="password" placeholder="Group password" />
+    <button onclick="joinGroup()">Join/Create Group</button>
+  </div>
+  <div id="groupStatus"></div>
   <div id="chat"></div>
   <input id="message" placeholder="Type a message" onkeydown="if(event.key==='Enter') sendMessage()" />
   <button onclick="sendMessage()">Send</button>
@@ -28,8 +34,19 @@
     function joinChat() {
       username = document.getElementById("username").value;
       if (!username) return alert("Enter a username");
-      socket.emit("join", username);
+      socket.emit("join", { username });
     }
+
+    function joinGroup() {
+      const groupName = document.getElementById("groupName").value;
+      const password = document.getElementById("groupPassword").value;
+      if (!groupName || !password) return alert("Enter group name and password");
+      socket.emit("createOrJoinGroup", { groupName, password });
+    }
+
+    socket.on("joinedGroup", (groupName) => {
+      document.getElementById("groupStatus").innerText = `Joined group: ${groupName}`;
+    });
 
     socket.on("message", (msg) => {
       const chat = document.getElementById("chat");
@@ -40,6 +57,10 @@
     socket.on("userList", (userList) => {
       document.getElementById("users").innerHTML =
         `<strong>Online Users:</strong> ${userList.join(", ")}`;
+    });
+
+    socket.on("errorMessage", (msg) => {
+      alert(msg);
     });
 
     function sendMessage() {
