@@ -3,28 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <title>Group Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial; padding: 20px; }
-    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-    #users, #groupStatus { margin-top: 10px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: #f2f2f2; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+    h2 { margin-bottom: 20px; color: #333; }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #chat {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+      background: #fefefe;
+      border-radius: 8px;
+    }
+
+    #message {
+      margin-top: 10px;
+    }
+
+    #users, #groupStatus {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #666;
+    }
   </style>
 </head>
 <body>
-  <h2>Temporary Group Chat</h2>
-  <div>
-    <input id="username" placeholder="Enter username" />
-    <button onclick="joinChat()">Join</button>
+  <h2>🗨️ Temporary Group Chat</h2>
+  <div class="card">
+    <input id="username" placeholder="Enter your username" />
+    <button onclick="joinChat()">Join Chat</button>
   </div>
-  <div>
-    <input id="groupName" placeholder="Enter group name" />
+
+  <div class="card">
+    <input id="groupName" placeholder="Group name" />
     <input id="groupPassword" type="password" placeholder="Group password" />
-    <button onclick="joinGroup()">Join/Create Group</button>
+    <button onclick="joinGroup()">Join or Create Group</button>
   </div>
-  <div id="groupStatus"></div>
-  <div id="chat"></div>
-  <input id="message" placeholder="Type a message" onkeydown="if(event.key==='Enter') sendMessage()" />
-  <button onclick="sendMessage()">Send</button>
-  <div id="users"></div>
+
+  <div class="card">
+    <div id="groupStatus"></div>
+    <div id="chat"></div>
+    <input id="message" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMessage()" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <div class="card">
+    <div id="users"></div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -45,7 +105,7 @@
     }
 
     socket.on("joinedGroup", (groupName) => {
-      document.getElementById("groupStatus").innerText = `Joined group: ${groupName}`;
+      document.getElementById("groupStatus").innerText = `📌 Joined group: ${groupName}`;
     });
 
     socket.on("message", (msg) => {
