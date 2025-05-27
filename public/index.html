@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Temporary Chat</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+    #users { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Temporary Chat</h2>
+  <div>
+    <input id="username" placeholder="Enter username" />
+    <button onclick="joinChat()">Join</button>
+  </div>
+  <div id="chat"></div>
+  <input id="message" placeholder="Type a message" onkeydown="if(event.key==='Enter') sendMessage()" />
+  <button onclick="sendMessage()">Send</button>
+  <div id="users"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let username = "";
+
+    function joinChat() {
+      username = document.getElementById("username").value;
+      if (!username) return alert("Enter a username");
+      socket.emit("join", username);
+    }
+
+    socket.on("message", (msg) => {
+      const chat = document.getElementById("chat");
+      chat.innerHTML += `<p><strong>${msg.username}:</strong> ${msg.text}</p>`;
+      chat.scrollTop = chat.scrollHeight;
+    });
+
+    socket.on("userList", (userList) => {
+      document.getElementById("users").innerHTML =
+        `<strong>Online Users:</strong> ${userList.join(", ")}`;
+    });
+
+    function sendMessage() {
+      const input = document.getElementById("message");
+      if (!input.value) return;
+      socket.emit("message", input.value);
+      input.value = "";
+    }
+  </script>
+</body>
+</html>
